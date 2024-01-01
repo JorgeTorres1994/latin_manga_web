@@ -1,11 +1,15 @@
 /*import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetalleMangasUsuario extends StatelessWidget {
   final String mangaId;
+  final double userRating;
 
-  const DetalleMangasUsuario({Key? key, required this.mangaId})
+  const DetalleMangasUsuario(
+      {Key? key, required this.mangaId, required this.userRating})
       : super(key: key);
 
   void _launchPDFDownload(String pdfUrl) async {
@@ -111,6 +115,80 @@ class DetalleMangasUsuario extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            RatingBar.builder(
+                              initialRating: userRating,
+                              minRating: 1,
+                              direction: Axis.horizontal,
+                              allowHalfRating: true,
+                              itemCount: 5,
+                              itemSize: 30,
+                              itemBuilder: (context, _) => const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                              ),
+                              onRatingUpdate: (newRating) async {
+                                User? user = FirebaseAuth.instance.currentUser;
+
+                                if (user != null) {
+                                  String usuarioId = user.uid;
+                                  String mangaId = mangaData['id'];
+
+                                  // Verificar si ya existe un registro en detalle_puntuacion
+                                  var existingRating = await FirebaseFirestore
+                                      .instance
+                                      .collection('detalle_puntuacion')
+                                      .where('idManga', isEqualTo: mangaId)
+                                      .where('idUsuario', isEqualTo: usuarioId)
+                                      .get();
+
+                                  if (existingRating.docs.isNotEmpty) {
+                                    // Si ya existe, actualizar el registro existente
+                                    await existingRating.docs.first.reference
+                                        .update({
+                                      'numeroRating': newRating,
+                                    });
+                                  } else {
+                                    // Si no existe, crear un nuevo registro
+                                    await FirebaseFirestore.instance
+                                        .collection('detalle_puntuacion')
+                                        .add({
+                                      'idManga': mangaId,
+                                      'idUsuario': usuarioId,
+                                      'numeroRating': newRating,
+                                    });
+                                  }
+
+                                  // Actualizar la puntuación total y el número de ratings en la colección de mangas
+                                  double totalRating =
+                                      mangaData['totalRating'] ?? 0.0;
+                                  int numeroRating =
+                                      mangaData['numeroRating'] ?? 0;
+
+                                  totalRating =
+                                      (totalRating * numeroRating + newRating) /
+                                          (numeroRating + 1);
+                                  numeroRating++;
+
+                                  await FirebaseFirestore.instance
+                                      .collection('mangas')
+                                      .doc(mangaId)
+                                      .update({
+                                    'totalRating': totalRating,
+                                    'numeroRating': numeroRating,
+                                  });
+
+                                  print('Nueva calificación: $newRating');
+                                } else {
+                                  print('Usuario no autenticado');
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -121,6 +199,7 @@ class DetalleMangasUsuario extends StatelessWidget {
                               },
                               child: Text('Descargar'),
                             ),
+                            SizedBox(height: 30),
                             ElevatedButton(
                               onPressed: () {
                                 // Validar si existe el linkManga antes de abrirlo
@@ -430,38 +509,48 @@ class DetalleMangasUsuario extends StatelessWidget {
                                 color: Colors.amber,
                               ),
                               onRatingUpdate: (newRating) async {
-                                // Asegúrate de tener el ID del usuario y del manga disponibles
                                 User? user = FirebaseAuth.instance.currentUser;
 
                                 if (user != null) {
                                   String usuarioId = user.uid;
+                                  String mangaId = mangaData['id'];
 
-                                  // Obtiene el ID del manga de los datos
-                                  String mangaId = mangaData[
-                                      'id']; // Ajusta según cómo obtienes el ID del manga
+                                  // Verificar si ya existe un registro en detalle_puntuacion
+                                  var existingRating = await FirebaseFirestore
+                                      .instance
+                                      .collection('detalle_puntuacion')
+                                      .where('idManga', isEqualTo: mangaId)
+                                      .where('idUsuario', isEqualTo: usuarioId)
+                                      .get();
 
-                                  // Calcula la puntuación total en detalle_puntuacion
+                                  if (existingRating.docs.isNotEmpty) {
+                                    // Si ya existe, actualizar el registro existente
+                                    await existingRating.docs.first.reference
+                                        .update({
+                                      'numeroRating': newRating,
+                                    });
+                                  } else {
+                                    // Si no existe, crear un nuevo registro
+                                    await FirebaseFirestore.instance
+                                        .collection('detalle_puntuacion')
+                                        .add({
+                                      'idManga': mangaId,
+                                      'idUsuario': usuarioId,
+                                      'numeroRating': newRating,
+                                    });
+                                  }
+
+                                  // Actualizar la puntuación total y el número de ratings en la colección de mangas
                                   double totalRating =
                                       mangaData['totalRating'] ?? 0.0;
                                   int numeroRating =
                                       mangaData['numeroRating'] ?? 0;
 
-                                  // Actualiza la puntuación total y el número de ratings
-                                  await FirebaseFirestore.instance
-                                      .collection('detalle_puntuacion')
-                                      .add({
-                                    'idManga': mangaId,
-                                    'idUsuario': usuarioId,
-                                    'numeroRating': newRating,
-                                  });
-
-                                  // Calcula la nueva puntuación total
                                   totalRating =
                                       (totalRating * numeroRating + newRating) /
                                           (numeroRating + 1);
                                   numeroRating++;
 
-                                  // Actualiza la puntuación total y el número de ratings en la colección de mangas
                                   await FirebaseFirestore.instance
                                       .collection('mangas')
                                       .doc(mangaId)

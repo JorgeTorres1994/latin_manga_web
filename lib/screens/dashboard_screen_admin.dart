@@ -303,35 +303,6 @@ class _DashboardScreenState extends State<DashboarScreenAdmin> {
                         ),
                         Row(
                           children: [
-                            /*ButtonsWidget(
-                              onPressed: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const TodosMangas(),
-                                  ),
-                                );
-                              },
-                              text: 'Ver todo',
-                              icon: Icons.book_online,
-                              backgroundColor: Colors.blueAccent,
-                            ),
-                            const Spacer(),*/
-                            /*ButtonsWidget(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        //const AgregarMangaForm(),
-                                        AgregarMangaForm(),
-                                  ),
-                                );
-                              },
-                              text: 'Agregar mangas',
-                              icon: Icons.add,
-                              backgroundColor: Colors.blueAccent,
-                            ),*/
                             ButtonsWidget(
                               onPressed: () {
                                 Navigator.pushReplacement(
