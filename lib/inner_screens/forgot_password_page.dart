@@ -1,7 +1,5 @@
-import 'package:aplicacion_manga_admin_panel/otros/contss.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/login_form.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/textos_widget.dart';
-import 'package:card_swiper/card_swiper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -38,9 +36,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           context: context,
           builder: (context) {
             return AlertDialog(
-              /*content: Text(
-                e.message.toString(),
-              ),*/
               content: Text(
                 '¡El correo no existe!, no se pudo restaurar la contraseña',
               ),
@@ -54,21 +49,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       body: Stack(
           //padding: kDefaultPadding,
           children: [
-            Swiper(
-              duration: 800,
-              autoplayDelay: 8000,
-              itemBuilder: (BuildContext context, int index) {
-                return Image.asset(
-                  Constss.authImagesPaths2[index],
-                  fit: BoxFit.cover,
-                );
-              },
-              autoplay: true,
-              itemCount: Constss.authImagesPaths2.length,
-            ),
-            Container(
-              color: Colors.black.withOpacity(0.7),
-            ),
             SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

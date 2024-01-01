@@ -12,7 +12,6 @@ class DashBoardScreenUsuario extends StatefulWidget {
   const DashBoardScreenUsuario({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _DashBoardScreenUsuarioState createState() => _DashBoardScreenUsuarioState();
 }
 
@@ -20,6 +19,9 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
   String selectedCategory = 'Todos';
   final double bannerHeight = 80.0;
   final double letterSize = 36.0;
+
+  User? _currentUser;
+  String? _creatorUsername;
 
   Map<String, bool> hoveredMangas = {};
   Map<String, bool> pressedMangas = {};
@@ -82,12 +84,19 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             CircleAvatar(
-                              backgroundImage: AssetImage('images/anime2.jpg'),
+                              backgroundImage:
+                                  user?.providerData[0].providerId ==
+                                          'google.com'
+                                      ? NetworkImage(user?.photoURL ?? '')
+                                          as ImageProvider<Object>?
+                                      : AssetImage('images/anime2.jpg'),
                               radius: 30,
                             ),
                             SizedBox(height: 10),
                             Text(
-                              userData?['usuario'] ?? 'Usuario',
+                              user?.providerData[0]?.providerId == 'google.com'
+                                  ? user?.displayName ?? 'Usuario'
+                                  : userData?['usuario'] ?? 'Usuario',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -95,7 +104,10 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                               ),
                             ),
                             Text(
-                              user?.email ?? 'Correo electrónico',
+                              user?.providerData[0]?.providerId == 'google.com'
+                                  ? user?.providerData[0]?.email ??
+                                      'Correo electrónico'
+                                  : userData?['correo'] ?? 'Correo electrónico',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
@@ -385,7 +397,7 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
   final double letterSize = 36.0;
 
   User? _currentUser;
-  String? _creatorUsername;
+  Map<String, dynamic>? _userData;
 
   Map<String, bool> hoveredMangas = {};
   Map<String, bool> pressedMangas = {};
@@ -415,8 +427,8 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
         ),
       ),
       drawer: Drawer(
-        child: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
+        child: FutureBuilder<User?>(
+          future: FirebaseAuth.instance.authStateChanges().first,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return CircularProgressIndicator();
@@ -424,62 +436,29 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
 
             User? user = snapshot.data;
 
+            if (user == null) {
+              return Container(); // No hay usuario autenticado
+            }
+
             return FutureBuilder<DocumentSnapshot>(
               future: FirebaseFirestore.instance
                   .collection('users')
-                  .doc(user?.uid)
+                  .doc(user.uid)
                   .get(),
               builder: (context, userSnapshot) {
                 if (userSnapshot.connectionState == ConnectionState.waiting) {
                   return CircularProgressIndicator();
                 }
 
+                if (!userSnapshot.hasData || userSnapshot.data == null) {
+                  return Container(); // No hay datos de usuario
+                }
+
                 Map<String, dynamic>? userData =
-                    (userSnapshot.data?.data() as Map<String, dynamic>?);
+                    userSnapshot.data!.data() as Map<String, dynamic>?;
 
                 return ListView(
                   children: [
-                    /*DrawerHeader(
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundImage:
-                                  user?.providerData[0].providerId ==
-                                          'google.com'
-                                      ? NetworkImage(user?.photoURL ?? '')
-                                          as ImageProvider<Object>?
-                                      : AssetImage('images/anime2.jpg'),
-                              radius: 30,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.displayName ?? 'Usuario'
-                                  : userData?['usuario'] ?? 'Usuario',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.email ?? 'Correo electrónico'
-                                  : userData?['correo'] ?? 'Correo electrónico',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),*/
                     DrawerHeader(
                       decoration: BoxDecoration(
                         color: Colors.green,
@@ -490,17 +469,17 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                           children: [
                             CircleAvatar(
                               backgroundImage:
-                                  user?.providerData[0].providerId ==
+                                  user.providerData[0].providerId ==
                                           'google.com'
-                                      ? NetworkImage(user?.photoURL ?? '')
+                                      ? NetworkImage(user.photoURL ?? '')
                                           as ImageProvider<Object>?
                                       : AssetImage('images/anime2.jpg'),
                               radius: 30,
                             ),
                             SizedBox(height: 10),
                             Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.displayName ?? 'Usuario'
+                              user.providerData[0]?.providerId == 'google.com'
+                                  ? user.displayName ?? 'Usuario'
                                   : userData?['usuario'] ?? 'Usuario',
                               style: TextStyle(
                                 fontSize: 18,
@@ -509,8 +488,8 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                               ),
                             ),
                             Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.providerData[0]?.email ??
+                              user.providerData[0]?.providerId == 'google.com'
+                                  ? user.providerData[0]?.email ??
                                       'Correo electrónico'
                                   : userData?['correo'] ?? 'Correo electrónico',
                               style: TextStyle(
@@ -523,32 +502,35 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                       ),
                     ),
                     ListTile(
-                        title: Text(
-                          'Ubicación de tiendas',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => MapScreen()),
-                          );
-                        }),
+                      title: Text(
+                        'Ubicación de tiendas',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onTap: () async {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => MapScreen()),
+                        );
+                        Navigator.pop(context); // Cierra el Drawer
+                      },
+                    ),
                     SizedBox(
                       height: 20,
                     ),
                     ListTile(
-                        title: Text(
-                          'Donaciones',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => DonacionesScreen()),
-                          );
-                        }),
+                      title: Text(
+                        'Donaciones',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onTap: () async {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DonacionesScreen()),
+                        );
+                        Navigator.pop(context); // Cierra el Drawer
+                      },
+                    ),
                     SizedBox(
                       height: 200,
                     ),
@@ -558,7 +540,6 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                         style: TextStyle(color: Colors.red),
                       ),
                       onTap: () async {
-                        // Mostrar cuadro de diálogo de confirmación
                         bool confirmarCerrarSesion = await showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -584,7 +565,6 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                           },
                         );
 
-                        // Si se confirma, cerrar sesión
                         if (confirmarCerrarSesion == true) {
                           await FirebaseAuth.instance.signOut();
                           Navigator.pop(context);
@@ -660,12 +640,59 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
     );
   }
 
-  Widget _buildMangaGrid() {
+  /*Widget _buildMangaGrid() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('mangas').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return CircularProgressIndicator();
+        }
+
+        var mangas = snapshot.data!.docs
+            .where((doc) =>
+                selectedCategory == 'Todos' ||
+                doc['mangaCategoryName'] == selectedCategory)
+            .toList();
+
+        return Column(
+          children: [
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 16.0,
+                  mainAxisSpacing: 16.0,
+                ),
+                itemCount: mangas.length,
+                itemBuilder: (context, index) {
+                  var manga = mangas[index];
+                  return _buildMangaTile(manga);
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                '# Resultados ${mangas.length}',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }*/
+
+  Widget _buildMangaGrid() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('mangas').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Container();
         }
 
         var mangas = snapshot.data!.docs
@@ -712,11 +739,19 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
 
     return InkWell(
       onTap: () {
-        // Lógica de selección al hacer clic
-        Navigator.push(
+        /*Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetalleMangasUsuario(mangaId: mangaId),
+          ),
+        );*/
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetalleMangasUsuario(
+                mangaId: mangaId,
+                userRating:
+                    0.0), // Reemplaza 0.0 con el valor real de userRating
           ),
         );
 
@@ -739,11 +774,9 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
         width: 150,
         decoration: BoxDecoration(
           color: pressedMangas[mangaId] == true
-              ? Colors.grey
-                  .withOpacity(0.5) // Color de fondo cuando está presionado
+              ? Colors.grey.withOpacity(0.5)
               : hoveredMangas[mangaId] == true
-                  ? Colors.grey.withOpacity(
-                      0.2) // Color de fondo cuando está seleccionado
+                  ? Colors.grey.withOpacity(0.2)
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),

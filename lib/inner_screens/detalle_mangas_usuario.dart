@@ -24,6 +24,26 @@ class DetalleMangasUsuario extends StatelessWidget {
     }
   }
 
+  Future<void> _mostrarDialog(BuildContext context, String mensaje) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(mensaje),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +97,7 @@ class DetalleMangasUsuario extends StatelessWidget {
                         ),
                         SizedBox(height: 16),
                         Text(
-                          'Categoría: ${mangaData['mangaCategoryName']}',
+                          'Género: ${mangaData['mangaCategoryName']}',
                           style: TextStyle(fontSize: 16),
                         ),
                         SizedBox(height: 8),
@@ -87,10 +107,11 @@ class DetalleMangasUsuario extends StatelessWidget {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Número de Páginas: ${mangaData['numberPages']}',
+                          '# Páginas: ${mangaData['numberPages']}',
                           style: TextStyle(fontSize: 16),
                         ),
                         SizedBox(height: 16),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -102,7 +123,14 @@ class DetalleMangasUsuario extends StatelessWidget {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                _launchOnlineViewer(mangaData['linkManga']);
+                                // Validar si existe el linkManga antes de abrirlo
+                                if (mangaData['linkManga'] != null &&
+                                    mangaData['linkManga'].isNotEmpty) {
+                                  _launchOnlineViewer(mangaData['linkManga']);
+                                } else {
+                                  _mostrarDialog(context,
+                                      'No existe un manga almacenado en Google Drive.');
+                                }
                               },
                               child: Text('Ver online'),
                             ),
@@ -271,13 +299,17 @@ class _ComentariosFormState extends State<ComentariosForm> {
 */
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetalleMangasUsuario extends StatelessWidget {
   final String mangaId;
+  final double userRating;
 
-  const DetalleMangasUsuario({Key? key, required this.mangaId})
+  const DetalleMangasUsuario(
+      {Key? key, required this.mangaId, required this.userRating})
       : super(key: key);
 
   void _launchPDFDownload(String pdfUrl) async {
@@ -369,7 +401,7 @@ class DetalleMangasUsuario extends StatelessWidget {
                         ),
                         SizedBox(height: 16),
                         Text(
-                          'Categoría: ${mangaData['mangaCategoryName']}',
+                          'Género: ${mangaData['mangaCategoryName']}',
                           style: TextStyle(fontSize: 16),
                         ),
                         SizedBox(height: 8),
@@ -379,10 +411,75 @@ class DetalleMangasUsuario extends StatelessWidget {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Número de Páginas: ${mangaData['numberPages']}',
+                          '# Páginas: ${mangaData['numberPages']}',
                           style: TextStyle(fontSize: 16),
                         ),
                         SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            RatingBar.builder(
+                              initialRating: userRating,
+                              minRating: 1,
+                              direction: Axis.horizontal,
+                              allowHalfRating: true,
+                              itemCount: 5,
+                              itemSize: 30,
+                              itemBuilder: (context, _) => const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                              ),
+                              onRatingUpdate: (newRating) async {
+                                // Asegúrate de tener el ID del usuario y del manga disponibles
+                                User? user = FirebaseAuth.instance.currentUser;
+
+                                if (user != null) {
+                                  String usuarioId = user.uid;
+
+                                  // Obtiene el ID del manga de los datos
+                                  String mangaId = mangaData[
+                                      'id']; // Ajusta según cómo obtienes el ID del manga
+
+                                  // Calcula la puntuación total en detalle_puntuacion
+                                  double totalRating =
+                                      mangaData['totalRating'] ?? 0.0;
+                                  int numeroRating =
+                                      mangaData['numeroRating'] ?? 0;
+
+                                  // Actualiza la puntuación total y el número de ratings
+                                  await FirebaseFirestore.instance
+                                      .collection('detalle_puntuacion')
+                                      .add({
+                                    'idManga': mangaId,
+                                    'idUsuario': usuarioId,
+                                    'numeroRating': newRating,
+                                  });
+
+                                  // Calcula la nueva puntuación total
+                                  totalRating =
+                                      (totalRating * numeroRating + newRating) /
+                                          (numeroRating + 1);
+                                  numeroRating++;
+
+                                  // Actualiza la puntuación total y el número de ratings en la colección de mangas
+                                  await FirebaseFirestore.instance
+                                      .collection('mangas')
+                                      .doc(mangaId)
+                                      .update({
+                                    'totalRating': totalRating,
+                                    'numeroRating': numeroRating,
+                                  });
+
+                                  print('Nueva calificación: $newRating');
+                                } else {
+                                  print('Usuario no autenticado');
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -392,6 +489,7 @@ class DetalleMangasUsuario extends StatelessWidget {
                               },
                               child: Text('Descargar'),
                             ),
+                            SizedBox(height: 30),
                             ElevatedButton(
                               onPressed: () {
                                 // Validar si existe el linkManga antes de abrirlo

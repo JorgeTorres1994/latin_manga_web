@@ -476,9 +476,10 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 */
 
+import 'package:aplicacion_manga_admin_panel/inner_screens/forgot_password_page.dart';
+import 'package:aplicacion_manga_admin_panel/inner_screens/register_page.dart';
 import 'package:aplicacion_manga_admin_panel/responsive.dart';
 import 'package:aplicacion_manga_admin_panel/screens/dashboard_screen_usuario.dart';
-import 'package:aplicacion_manga_admin_panel/screens/main_screen_usuarios.dart';
 import 'package:aplicacion_manga_admin_panel/services/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -809,6 +810,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: true,
               ),
               SizedBox(height: 20.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return ForgotPasswordPage();
+                        }));
+                      },
+                      child: Text(
+                        '¿Olvidaste tu contraseña?',
+                        //style: TextStyle(color: Colors.grey[600]),
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
               ElevatedButton(
                 onPressed: isLoading ? null : signInWithEmailAndPassword,
                 child: Text('Ingresar'),
@@ -932,6 +957,31 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: true,
                     ),
                     SizedBox(height: 20.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return ForgotPasswordPage();
+                              }));
+                            },
+                            child: Text(
+                              '¿Olvidaste tu contraseña?',
+                              //style: TextStyle(color: Colors.grey[600]),
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 40.0),
                     ElevatedButton(
                       onPressed: isLoading ? null : signInWithEmailAndPassword,
                       child: Text('Ingresar'),
@@ -999,6 +1049,37 @@ class _LoginScreenState extends State<LoginScreen> {
                           themeState.setDarkTheme = value;
                         });
                       },
+                    ),
+                    SizedBox(
+                      height: 30,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '¿No tienes cuenta?',
+                            style: TextStyle(color: Colors.grey[700]),
+                          ),
+                          const SizedBox(height: 4),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return RegisterPage();
+                              }));
+                            },
+                            child: const Text(
+                              '¡Regístrate!',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
