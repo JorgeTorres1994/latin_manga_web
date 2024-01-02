@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:aplicacion_manga_admin_panel/screens/loading_manager.dart';
 import 'package:aplicacion_manga_admin_panel/services/global_method.dart';
 import 'package:aplicacion_manga_admin_panel/services/utils.dart';
-import 'package:aplicacion_manga_admin_panel/widgets/buttons.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/text_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -374,20 +373,39 @@ class _EditarMangaScreenState extends State<EditarMangaScreen> {
                         SizedBox(
                           height: 20,
                         ),
-                        ButtonsWidget(
+                        /*ButtonsWidget(
                           onPressed:
                               pickFile, // Nuevo botón para seleccionar el archivo PDF
                           text: 'Seleccionar archivo PDF',
                           icon: Icons.attach_file,
                           backgroundColor: Colors
                               .orangeAccent, // Puedes cambiar el color del botón
+                        ),*/
+                        ElevatedButton(
+                          onPressed: pickFile,
+                          style: ElevatedButton.styleFrom(
+                            primary:
+                                Colors.orangeAccent, // Color de fondo naranja
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.attach_file,
+                                  color: Colors.white), // Icono en blanco
+                              SizedBox(
+                                  width:
+                                      8), // Añadido espacio entre el icono y el texto
+                              Text('Seleccionar archivo PDF',
+                                  style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(18.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              ButtonsWidget(
+                              /*ButtonsWidget(
                                 onPressed: () async {
                                   GlobalMethods.warningDialog(
                                       title: '¿Borrar?',
@@ -412,14 +430,74 @@ class _EditarMangaScreenState extends State<EditarMangaScreen> {
                                 text: 'Eliminar',
                                 icon: IconlyBold.danger,
                                 backgroundColor: Colors.red.shade700,
+                              ),*/
+                              ElevatedButton(
+                                onPressed: () async {
+                                  GlobalMethods.warningDialog(
+                                    title: '¿Borrar?',
+                                    subtitle: '¿Estás seguro?',
+                                    fct: () async {
+                                      await FirebaseFirestore.instance
+                                          .collection('mangas')
+                                          .doc(widget.id)
+                                          .delete();
+                                      await Fluttertoast.showToast(
+                                        msg: "Manga eliminado correctamente",
+                                        toastLength: Toast.LENGTH_LONG,
+                                        gravity: ToastGravity.CENTER,
+                                        timeInSecForIosWeb: 1,
+                                      );
+                                      while (Navigator.canPop(context)) {
+                                        Navigator.pop(context);
+                                      }
+                                    },
+                                    context: context,
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors
+                                      .red.shade700, // Color de fondo rojo
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(IconlyBold.danger,
+                                        color: Colors.white), // Icono en blanco
+                                    SizedBox(
+                                        width:
+                                            8), // Añadido espacio entre el icono y el texto
+                                    Text('Eliminar',
+                                        style: TextStyle(color: Colors.white)),
+                                  ],
+                                ),
                               ),
-                              ButtonsWidget(
+                              /*ButtonsWidget(
                                 onPressed: () {
                                   _updateForm();
                                 },
                                 text: 'Actualizar',
                                 icon: IconlyBold.setting,
                                 backgroundColor: Colors.blue,
+                              ),*/
+                              ElevatedButton(
+                                onPressed: () {
+                                  _updateForm();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors.blue, // Color de fondo azul
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(IconlyBold.setting,
+                                        color: Colors.white), // Icono en blanco
+                                    SizedBox(
+                                        width:
+                                            8), // Añadido espacio entre el icono y el texto
+                                    Text('Actualizar',
+                                        style: TextStyle(color: Colors.white)),
+                                  ],
+                                ),
                               ),
                             ],
                           ),

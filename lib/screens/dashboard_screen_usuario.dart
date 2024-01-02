@@ -16,12 +16,38 @@ class DashBoardScreenUsuario extends StatefulWidget {
 }
 
 class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
+  User? _user; // Variable para almacenar el usuario
+  Map<String, dynamic>? _userData; // Variable para almacenar datos del usuario
+
   String selectedCategory = 'Todos';
   final double bannerHeight = 80.0;
   final double letterSize = 36.0;
 
   Map<String, bool> hoveredMangas = {};
   Map<String, bool> pressedMangas = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _user = FirebaseAuth.instance.currentUser;
+    _loadUserData(); // Cargar datos del usuario al inicio
+  }
+
+  Future<void> _loadUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      setState(() {
+        _user = user;
+        _userData = userSnapshot.data() as Map<String, dynamic>?;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,152 +74,124 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
         ),
       ),
       drawer: Drawer(
-        child: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            }
-
-            User? user = snapshot.data;
-
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(user?.uid)
-                  .get(),
-              builder: (context, userSnapshot) {
-                if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                }
-
-                Map<String, dynamic>? userData =
-                    (userSnapshot.data?.data() as Map<String, dynamic>?);
-
-                return ListView(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    DrawerHeader(
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundImage:
-                                  user?.providerData[0].providerId ==
-                                          'google.com'
-                                      ? NetworkImage(user?.photoURL ?? '')
-                                          as ImageProvider<Object>?
-                                      : AssetImage('images/anime2.jpg'),
-                              radius: 30,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.displayName ?? 'Usuario'
-                                  : userData?['usuario'] ?? 'Usuario',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.providerData[0]?.email ??
-                                      'Correo electrónico'
-                                  : userData?['correo'] ?? 'Correo electrónico',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
+                    CircleAvatar(
+                      backgroundImage:
+                          _user?.providerData[0].providerId == 'google.com'
+                              ? NetworkImage(_user?.photoURL ?? '')
+                                  as ImageProvider<Object>?
+                              : AssetImage('images/anime2.jpg'),
+                      radius: 30,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      _user?.providerData[0]?.providerId == 'google.com'
+                          ? _user?.displayName ?? 'Usuario'
+                          : _userData?['usuario'] ?? 'Usuario',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    ListTile(
-                        title: Text(
-                          'Ubicación de tiendas',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => MapScreen()),
-                          );
-                        }),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    ListTile(
-                        title: Text(
-                          'Donaciones',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => DonacionesScreen()),
-                          );
-                        }),
-                    SizedBox(
-                      height: 200,
-                    ),
-                    ListTile(
-                      title: Text(
-                        'Cerrar Sesión',
-                        style: TextStyle(color: Colors.red),
+                    Text(
+                      _user?.providerData[0]?.providerId == 'google.com'
+                          ? _user?.providerData[0]?.email ??
+                              'Correo electrónico'
+                          : _userData?['correo'] ?? 'Correo electrónico',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
                       ),
-                      onTap: () async {
-                        // Mostrar cuadro de diálogo de confirmación
-                        bool confirmarCerrarSesion = await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('Confirmar'),
-                              content:
-                                  Text('¿Seguro que deseas cerrar sesión?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(false);
-                                  },
-                                  child: Text('Cancelar'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(true);
-                                  },
-                                  child: Text('Aceptar'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-
-                        // Si se confirma, cerrar sesión
-                        if (confirmarCerrarSesion == true) {
-                          await FirebaseAuth.instance.signOut();
-                          Navigator.pop(context);
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginScreen(),
-                            ),
-                          );
-                        }
-                      },
                     ),
                   ],
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text(
+                'Ubicación de tiendas',
+                style: TextStyle(color: Colors.black),
+              ),
+              onTap: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MapScreen()),
                 );
               },
-            );
-          },
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            ListTile(
+              title: Text(
+                'Donaciones',
+                style: TextStyle(color: Colors.black),
+              ),
+              onTap: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DonacionesScreen()),
+                );
+              },
+            ),
+            SizedBox(
+              height: 200,
+            ),
+            ListTile(
+              title: Text(
+                'Cerrar Sesión',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () async {
+                // Mostrar cuadro de diálogo de confirmación
+                bool confirmarCerrarSesion = await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Confirmar'),
+                      content: Text('¿Seguro que deseas cerrar sesión?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                          child: Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          child: Text('Aceptar'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                // Si se confirma, cerrar sesión
+                if (confirmarCerrarSesion == true) {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LoginScreen(),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
         ),
       ),
       body: Container(
@@ -390,12 +388,38 @@ class DashBoardScreenUsuario extends StatefulWidget {
 }
 
 class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
+  User? _user; // Variable para almacenar el usuario
+  Map<String, dynamic>? _userData; // Variable para almacenar datos del usuario
+
   String selectedCategory = 'Todos';
   final double bannerHeight = 80.0;
   final double letterSize = 36.0;
 
   Map<String, bool> hoveredMangas = {};
   Map<String, bool> pressedMangas = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _user = FirebaseAuth.instance.currentUser;
+    _loadUserData(); // Cargar datos del usuario al inicio
+  }
+
+  Future<void> _loadUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      setState(() {
+        _user = user;
+        _userData = userSnapshot.data() as Map<String, dynamic>?;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -422,152 +446,124 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
         ),
       ),
       drawer: Drawer(
-        child: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            }
-
-            User? user = snapshot.data;
-
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(user?.uid)
-                  .get(),
-              builder: (context, userSnapshot) {
-                if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                }
-
-                Map<String, dynamic>? userData =
-                    (userSnapshot.data?.data() as Map<String, dynamic>?);
-
-                return ListView(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    DrawerHeader(
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundImage:
-                                  user?.providerData[0].providerId ==
-                                          'google.com'
-                                      ? NetworkImage(user?.photoURL ?? '')
-                                          as ImageProvider<Object>?
-                                      : AssetImage('images/anime2.jpg'),
-                              radius: 30,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.displayName ?? 'Usuario'
-                                  : userData?['usuario'] ?? 'Usuario',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              user?.providerData[0]?.providerId == 'google.com'
-                                  ? user?.providerData[0]?.email ??
-                                      'Correo electrónico'
-                                  : userData?['correo'] ?? 'Correo electrónico',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
+                    CircleAvatar(
+                      backgroundImage:
+                          _user?.providerData[0].providerId == 'google.com'
+                              ? NetworkImage(_user?.photoURL ?? '')
+                                  as ImageProvider<Object>?
+                              : AssetImage('images/anime2.jpg'),
+                      radius: 30,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      _user?.providerData[0]?.providerId == 'google.com'
+                          ? _user?.displayName ?? 'Usuario'
+                          : _userData?['usuario'] ?? 'Usuario',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    ListTile(
-                        title: Text(
-                          'Ubicación de tiendas',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => MapScreen()),
-                          );
-                        }),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    ListTile(
-                        title: Text(
-                          'Donaciones',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => DonacionesScreen()),
-                          );
-                        }),
-                    SizedBox(
-                      height: 200,
-                    ),
-                    ListTile(
-                      title: Text(
-                        'Cerrar Sesión',
-                        style: TextStyle(color: Colors.red),
+                    Text(
+                      _user?.providerData[0]?.providerId == 'google.com'
+                          ? _user?.providerData[0]?.email ??
+                              'Correo electrónico'
+                          : _userData?['correo'] ?? 'Correo electrónico',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
                       ),
-                      onTap: () async {
-                        // Mostrar cuadro de diálogo de confirmación
-                        bool confirmarCerrarSesion = await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('Confirmar'),
-                              content:
-                                  Text('¿Seguro que deseas cerrar sesión?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(false);
-                                  },
-                                  child: Text('Cancelar'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(true);
-                                  },
-                                  child: Text('Aceptar'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-
-                        // Si se confirma, cerrar sesión
-                        if (confirmarCerrarSesion == true) {
-                          await FirebaseAuth.instance.signOut();
-                          Navigator.pop(context);
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginScreen(),
-                            ),
-                          );
-                        }
-                      },
                     ),
                   ],
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text(
+                'Ubicación de tiendas',
+                style: TextStyle(color: Colors.black),
+              ),
+              onTap: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MapScreen()),
                 );
               },
-            );
-          },
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            ListTile(
+              title: Text(
+                'Donaciones',
+                style: TextStyle(color: Colors.black),
+              ),
+              onTap: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DonacionesScreen()),
+                );
+              },
+            ),
+            SizedBox(
+              height: 200,
+            ),
+            ListTile(
+              title: Text(
+                'Cerrar Sesión',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () async {
+                // Mostrar cuadro de diálogo de confirmación
+                bool confirmarCerrarSesion = await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Confirmar'),
+                      content: Text('¿Seguro que deseas cerrar sesión?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                          child: Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          child: Text('Aceptar'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                // Si se confirma, cerrar sesión
+                if (confirmarCerrarSesion == true) {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LoginScreen(),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
         ),
       ),
       body: Container(

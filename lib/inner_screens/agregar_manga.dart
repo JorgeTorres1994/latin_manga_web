@@ -612,7 +612,6 @@ import 'package:aplicacion_manga_admin_panel/screens/loading_manager.dart';
 import 'package:aplicacion_manga_admin_panel/services/global_method.dart';
 import 'package:aplicacion_manga_admin_panel/services/utils.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/buscador_mangas.dart';
-import 'package:aplicacion_manga_admin_panel/widgets/buttons.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/side_menu.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/text_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -980,13 +979,32 @@ class _AgregarMangaFormState extends State<AgregarMangaForm> {
                               const SizedBox(
                                 height: 20,
                               ),
-                              ButtonsWidget(
+                              /*ButtonsWidget(
                                 onPressed:
                                     pickFile, // Nuevo botón para seleccionar el archivo PDF
                                 text: 'Seleccionar archivo PDF',
                                 icon: Icons.attach_file,
                                 backgroundColor: Colors
                                     .orangeAccent, // Puedes cambiar el color del botón
+                              ),*/
+                              ElevatedButton(
+                                onPressed: pickFile,
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors
+                                      .orangeAccent, // Color de fondo naranja
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.attach_file,
+                                        color: Colors.white), // Icono en blanco
+                                    SizedBox(
+                                        width:
+                                            8), // Añadido espacio entre el icono y el texto
+                                    Text('Seleccionar archivo PDF',
+                                        style: TextStyle(color: Colors.white)),
+                                  ],
+                                ),
                               ),
                               const SizedBox(
                                 height: 20,
@@ -997,21 +1015,63 @@ class _AgregarMangaFormState extends State<AgregarMangaForm> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    ButtonsWidget(
+                                    /*ButtonsWidget(
                                       onPressed: () {
                                         _clearForm();
                                       },
                                       text: 'Limpiar formulario',
                                       icon: IconlyBold.danger,
                                       backgroundColor: Colors.red.shade300,
+                                    ),*/
+                                    ElevatedButton(
+                                      onPressed: _clearForm,
+                                      style: ElevatedButton.styleFrom(
+                                        primary: Colors.red
+                                            .shade300, // Color de fondo rojo
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(IconlyBold.danger,
+                                              color: Colors
+                                                  .white), // Icono en blanco
+                                          SizedBox(
+                                              width:
+                                                  8), // Añadido espacio entre el icono y el texto
+                                          Text('Limpiar formulario',
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ],
+                                      ),
                                     ),
-                                    ButtonsWidget(
+                                    /*ButtonsWidget(
                                       onPressed: () {
                                         _uploadForm();
                                       },
                                       text: 'Subir',
                                       icon: IconlyBold.upload,
                                       backgroundColor: Colors.blue,
+                                    ),*/
+                                    ElevatedButton(
+                                      onPressed: _uploadForm,
+                                      style: ElevatedButton.styleFrom(
+                                        primary:
+                                            Colors.blue, // Color de fondo azul
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(IconlyBold.upload,
+                                              color: Colors
+                                                  .white), // Icono en blanco
+                                          SizedBox(
+                                              width:
+                                                  8), // Añadido espacio entre el icono y el texto
+                                          Text('Subir',
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),

@@ -189,7 +189,6 @@ import 'package:aplicacion_manga_admin_panel/inner_screens/todos_mangas.dart';
 import 'package:aplicacion_manga_admin_panel/responsive.dart';
 import 'package:aplicacion_manga_admin_panel/services/utils.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/MangaGridWidget.dart';
-import 'package:aplicacion_manga_admin_panel/widgets/buttons.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/side_menu.dart';
 import 'package:aplicacion_manga_admin_panel/widgets/text_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -303,7 +302,7 @@ class _DashboardScreenState extends State<DashboarScreenAdmin> {
                         ),
                         Row(
                           children: [
-                            ButtonsWidget(
+                            ElevatedButton(
                               onPressed: () {
                                 Navigator.pushReplacement(
                                   context,
@@ -312,21 +311,24 @@ class _DashboardScreenState extends State<DashboarScreenAdmin> {
                                   ),
                                 );
                               },
-                              text: 'Ver todo',
-                              icon: Icons.book_online,
-                              backgroundColor: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? Colors.black // Color para el tema claro
-                                  : Colors.white, // Color para el tema oscuro
-                              textColor: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? Colors
-                                      .white // Color del texto para el tema claro
-                                  : Colors
-                                      .black, // Color del texto para el tema oscuro
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.red, // Color de fondo rojo
+                                onPrimary:
+                                    Colors.white, // Color del texto blanco
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.book_online),
+                                  SizedBox(
+                                      width:
+                                          8), // Añadido espacio entre el icono y el texto
+                                  Text('Ver todo'),
+                                ],
+                              ),
                             ),
                             const Spacer(),
-                            ButtonsWidget(
+                            ElevatedButton(
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -335,19 +337,22 @@ class _DashboardScreenState extends State<DashboarScreenAdmin> {
                                   ),
                                 );
                               },
-                              text: 'Agregar mangas',
-                              icon: Icons.add,
-                              backgroundColor: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? Colors.black // Color para el tema claro
-                                  : Colors.white, // Color para el tema oscuro
-                              textColor: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? Colors
-                                      .white // Color del texto para el tema claro
-                                  : Colors
-                                      .black, // Color del texto para el tema oscuro
-                            ),
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.red, // Color de fondo rojo
+                                onPrimary:
+                                    Colors.white, // Color del texto blanco
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.add),
+                                  SizedBox(
+                                      width:
+                                          8), // Añadido espacio entre el icono y el texto
+                                  Text('Agregar mangas'),
+                                ],
+                              ),
+                            )
                           ],
                         ),
                         SizedBox(
