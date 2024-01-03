@@ -16,12 +16,9 @@ class DashBoardScreenUsuario extends StatefulWidget {
 }
 
 class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
-  User? _user; // Variable para almacenar el usuario
-  Map<String, dynamic>? _userData; // Variable para almacenar datos del usuario
-
+  User? _user;
+  Map<String, dynamic>? _userData;
   String selectedCategory = 'Todos';
-  final double bannerHeight = 80.0;
-  final double letterSize = 36.0;
 
   Map<String, bool> hoveredMangas = {};
   Map<String, bool> pressedMangas = {};
@@ -30,7 +27,7 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
-    _loadUserData(); // Cargar datos del usuario al inicio
+    _loadUserData();
   }
 
   Future<void> _loadUserData() async {
@@ -51,19 +48,22 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isLargeScreen = screenWidth > 600;
+
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(bannerHeight),
+        preferredSize: Size.fromHeight(80.0),
         child: AppBar(
           backgroundColor: Colors.green,
           title: Center(
             child: Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(isLargeScreen ? 16 : 8),
               child: Center(
                 child: Text(
                   'LATIN MANGA',
                   style: TextStyle(
-                    fontSize: letterSize,
+                    fontSize: isLargeScreen ? 24.0 : 18.0,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -153,7 +153,6 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                 style: TextStyle(color: Colors.red),
               ),
               onTap: () async {
-                // Mostrar cuadro de diálogo de confirmación
                 bool confirmarCerrarSesion = await showDialog(
                   context: context,
                   builder: (BuildContext context) {
@@ -178,7 +177,6 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                   },
                 );
 
-                // Si se confirma, cerrar sesión
                 if (confirmarCerrarSesion == true) {
                   await FirebaseAuth.instance.signOut();
                   Navigator.pop(context);
@@ -200,7 +198,10 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
           children: [
             Container(
               color: Colors.transparent,
-              padding: EdgeInsets.symmetric(vertical: 20),
+              padding: EdgeInsets.symmetric(
+                vertical: isLargeScreen ? 20 : 10,
+                horizontal: isLargeScreen ? 40 : 20,
+              ),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -220,8 +221,8 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
             Expanded(
               child: Container(
                 color: Colors.grey[200],
-                padding: EdgeInsets.all(16),
-                child: _buildMangaGrid(),
+                padding: EdgeInsets.all(isLargeScreen ? 24 : 16),
+                child: _buildMangaGrid(isLargeScreen),
               ),
             ),
           ],
@@ -250,12 +251,11 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
     );
   }
 
-  Widget _buildMangaGrid() {
+  Widget _buildMangaGrid(bool isLargeScreen) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('mangas').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          // Puedes retornar un contenedor vacío o simplemente nada.
           return Container();
         }
 
@@ -270,14 +270,14 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
             Expanded(
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
+                  crossAxisCount: isLargeScreen ? 4 : 2,
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
                 ),
                 itemCount: mangas.length,
                 itemBuilder: (context, index) {
                   var manga = mangas[index];
-                  return _buildMangaTile(manga);
+                  return _buildMangaTile(manga, isLargeScreen);
                 },
               ),
             ),
@@ -298,7 +298,7 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
     );
   }
 
-  Widget _buildMangaTile(QueryDocumentSnapshot manga) {
+  Widget _buildMangaTile(QueryDocumentSnapshot manga, bool isLargeScreen) {
     final String mangaId = manga.id;
 
     return InkWell(
@@ -327,39 +327,39 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
         });
       },
       child: Container(
-        width: 150,
+        width: isLargeScreen ? 150 : double.infinity,
         decoration: BoxDecoration(
           color: pressedMangas[mangaId] == true
-              ? Colors.grey
-                  .withOpacity(0.5) // Color de fondo cuando está presionado
+              ? Colors.grey.withOpacity(0.5)
               : hoveredMangas[mangaId] == true
-                  ? Colors.grey.withOpacity(
-                      0.2) // Color de fondo cuando está seleccionado
+                  ? Colors.grey.withOpacity(0.2)
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              manga['title'],
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.black,
+            Flexible(
+              child: Text(
+                manga['title'],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: isLargeScreen ? 18 : 14,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 4),
+            SizedBox(height: isLargeScreen ? 8 : 4),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 manga['imageUrl'],
                 fit: BoxFit.cover,
-                width: 250,
-                height: 280,
+                width: isLargeScreen ? 250 : double.infinity,
+                height: isLargeScreen ? 280 : 150,
               ),
             ),
           ],
@@ -388,12 +388,9 @@ class DashBoardScreenUsuario extends StatefulWidget {
 }
 
 class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
-  User? _user; // Variable para almacenar el usuario
-  Map<String, dynamic>? _userData; // Variable para almacenar datos del usuario
-
+  User? _user;
+  Map<String, dynamic>? _userData;
   String selectedCategory = 'Todos';
-  final double bannerHeight = 80.0;
-  final double letterSize = 36.0;
 
   Map<String, bool> hoveredMangas = {};
   Map<String, bool> pressedMangas = {};
@@ -402,7 +399,7 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
-    _loadUserData(); // Cargar datos del usuario al inicio
+    _loadUserData();
   }
 
   Future<void> _loadUserData() async {
@@ -423,19 +420,22 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isLargeScreen = screenWidth > 600;
+
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(bannerHeight),
+        preferredSize: Size.fromHeight(80.0),
         child: AppBar(
           backgroundColor: Colors.green,
           title: Center(
             child: Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(isLargeScreen ? 16 : 8),
               child: Center(
                 child: Text(
                   'LATIN MANGA',
                   style: TextStyle(
-                    fontSize: letterSize,
+                    fontSize: isLargeScreen ? 24.0 : 18.0,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -490,9 +490,14 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
               ),
             ),
             ListTile(
+              leading: Icon(Icons.location_on),
               title: Text(
                 'Ubicación de tiendas',
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
               ),
               onTap: () async {
                 Navigator.push(
@@ -505,9 +510,14 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
               height: 20,
             ),
             ListTile(
+              leading: Icon(Icons.monetization_on),
               title: Text(
                 'Donaciones',
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
               ),
               onTap: () async {
                 Navigator.push(
@@ -520,12 +530,16 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
               height: 200,
             ),
             ListTile(
+              leading: Icon(Icons.exit_to_app),
               title: Text(
                 'Cerrar Sesión',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
               ),
               onTap: () async {
-                // Mostrar cuadro de diálogo de confirmación
                 bool confirmarCerrarSesion = await showDialog(
                   context: context,
                   builder: (BuildContext context) {
@@ -550,7 +564,6 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
                   },
                 );
 
-                // Si se confirma, cerrar sesión
                 if (confirmarCerrarSesion == true) {
                   await FirebaseAuth.instance.signOut();
                   Navigator.pop(context);
@@ -572,7 +585,10 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
           children: [
             Container(
               color: Colors.transparent,
-              padding: EdgeInsets.symmetric(vertical: 20),
+              padding: EdgeInsets.symmetric(
+                vertical: isLargeScreen ? 20 : 10,
+                horizontal: isLargeScreen ? 40 : 20,
+              ),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -592,8 +608,8 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
             Expanded(
               child: Container(
                 color: Colors.grey[200],
-                padding: EdgeInsets.all(16),
-                child: _buildMangaGrid(),
+                padding: EdgeInsets.all(isLargeScreen ? 24 : 16),
+                child: _buildMangaGrid(isLargeScreen),
               ),
             ),
           ],
@@ -622,12 +638,11 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
     );
   }
 
-  Widget _buildMangaGrid() {
+  Widget _buildMangaGrid(bool isLargeScreen) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('mangas').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          // Puedes retornar un contenedor vacío o simplemente nada.
           return Container();
         }
 
@@ -642,14 +657,14 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
             Expanded(
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
+                  crossAxisCount: isLargeScreen ? 4 : 2,
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
                 ),
                 itemCount: mangas.length,
                 itemBuilder: (context, index) {
                   var manga = mangas[index];
-                  return _buildMangaTile(manga);
+                  return _buildMangaTile(manga, isLargeScreen);
                 },
               ),
             ),
@@ -670,7 +685,7 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
     );
   }
 
-  Widget _buildMangaTile(QueryDocumentSnapshot manga) {
+  Widget _buildMangaTile(QueryDocumentSnapshot manga, bool isLargeScreen) {
     final String mangaId = manga.id;
 
     return InkWell(
@@ -699,39 +714,39 @@ class _DashBoardScreenUsuarioState extends State<DashBoardScreenUsuario> {
         });
       },
       child: Container(
-        width: 150,
+        width: isLargeScreen ? 150 : double.infinity,
         decoration: BoxDecoration(
           color: pressedMangas[mangaId] == true
-              ? Colors.grey
-                  .withOpacity(0.5) // Color de fondo cuando está presionado
+              ? Colors.grey.withOpacity(0.5)
               : hoveredMangas[mangaId] == true
-                  ? Colors.grey.withOpacity(
-                      0.2) // Color de fondo cuando está seleccionado
+                  ? Colors.grey.withOpacity(0.2)
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              manga['title'],
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.black,
+            Flexible(
+              child: Text(
+                manga['title'],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: isLargeScreen ? 18 : 14,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 4),
+            SizedBox(height: isLargeScreen ? 8 : 4),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 manga['imageUrl'],
                 fit: BoxFit.cover,
-                width: 250,
-                height: 280,
+                width: isLargeScreen ? 250 : double.infinity,
+                height: isLargeScreen ? 280 : 150,
               ),
             ),
           ],
